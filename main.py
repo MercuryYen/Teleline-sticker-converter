@@ -5,7 +5,7 @@ import requests
 from PIL import Image
 import numpy as np
 from numba import jit
-from telegram.ext import Dispatcher, MessageHandler, Filters
+from telegram.ext import Dispatcher, MessageHandler, Filters,CommandHandler
 from telegram import InlineKeyboardButton,InlineKeyboardMarkup
 import telegram
 from flask import Flask,request
@@ -48,10 +48,21 @@ def find_ex(string,key_string):
 
 
 
+def start(bot,update):
+	bot.sendMessage(chat_id = update.message.chat.id,
+						text = "這個Bot可以將Line上的貼圖轉換成telegram上的貼圖，將貼圖商店的網址貼上來就會自動轉換了\n"+
+						"This bot can transform Line's stickers to Telegram's sticker. Post line-store's URL to convert.\n\n"+
+						"範例example：https://store.line.me/stickershop/product/3962468/ja")
 
+def help_(bot,update):
 
-
-
+	bot.sendMessage(chat_id = update.message.chat.id,
+					text = "直接傳網址給我就可以惹\nJust send me the URL.\n\n像這個Like this:https://store.line.me/stickershop/product/3962468/ja")
+	bot.sendMessage(chat_id = update.message.chat.id,
+					text = "如果是有錯誤或問題就找 @Homura343\nWhen in doubt, @Homura343 .")
+def about(bot,update):
+	bot.sendMessage(chat_id = update.message.chat.id,
+						text = "Author:@Homura343\nGithub:https://github.com/Mescury/Teleline-sticker-converter\n")
 
 
 
@@ -71,21 +82,6 @@ def webhook_handler():
 def reply_handler(bot, update):
 
 	text = update.message.text
-
-	if text=="/start" or text=="/help" or "/about":
-		bot.sendMessage(chat_id = update.message.chat.id,
-						text = "這個Bot可以將Line上的貼圖轉換成telegram上的貼圖，將貼圖商店的網址貼上來就會自動轉換了\n"+
-						"This bot can transform Line's stickers to Telegram's sticker. Post line-store's URL to convert.\n\n"+
-						"範例example：https://store.line.me/stickershop/product/3962468/ja")
-		return
-	if text=="/help":
-
-		bot.sendMessage(chat_id = update.message.chat.id,
-						text = "直接傳網址給我就可以惹\nJust send me the URL.\n\n像這個Like this:https://store.line.me/stickershop/product/3962468/ja")
-		bot.sendMessage(chat_id = update.message.chat.id,
-						text = "如果是有錯誤或問題就找 @Homura343，他做的，有問題都是他不是我呃哈哈哈哈哈\nWhen in doubt, @Homura343 .")
-	if text=="/about":
-		
 
 	main_message = bot.sendMessage(chat_id = update.message.chat.id,
 						text = "正在試試看這東西\n\nTrying this.").message_id
@@ -132,7 +128,7 @@ def reply_handler(bot, update):
 
 			bot.sendSticker(chat_id = update.message.chat.id,
 						sticker = a.stickers[0].file_id,
-						reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(text = "title",url="https://t.me/addstickers/"+"line"+str(sticker_number)+"_by_RekcitsEnilbot")]]))
+						reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(text = title,url="https://t.me/addstickers/"+"line"+str(sticker_number)+"_by_RekcitsEnilbot")]]))
 			return
 
 
@@ -184,11 +180,13 @@ def reply_handler(bot, update):
 						text = "噠啦～☆\n\nFinished!"+"\n\nLine sticker number:"+str(sticker_number)+"https://t.me/addstickers/"+"line"+str(sticker_number)+"_by_RekcitsEnilbot")
 	bot.sendSticker(chat_id = update.message.chat.id,
 					sticker = head_sticker,
-					reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(text = "title",url="https://t.me/addstickers/"+"line"+str(sticker_number)+"_by_RekcitsEnilbot")]]))
+					reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(text = title,url="https://t.me/addstickers/"+"line"+str(sticker_number)+"_by_RekcitsEnilbot")]]))
 
 dispatcher = Dispatcher(bot, None)
 
-
+dispatcher.add_handler(CommandHandler('start',start))
+dispatcher.add_handler(CommandHandler('help',help_))
+dispatcher.add_handler(CommandHandler('about',about))
 dispatcher.add_handler(MessageHandler(Filters.text, reply_handler))
 
 if __name__ == "__main__":

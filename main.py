@@ -1,4 +1,5 @@
 #coding = unicode
+import time
 import configparser
 from mag import handle_image
 import requests
@@ -22,6 +23,9 @@ app = Flask(__name__)
 bot = telegram.Bot(token=(config['TELEGRAM']['ACCESS_TOKEN']))
 
 emojis = "😂😘😍😊😁😔😄😭😒😳😜😉😃😢😝😱😡😏😞😅😚😌😀😋😆😐😕👍👌👿❤🖤💤🎵🔞"
+
+give_up_time = 23
+
 def random_emoji():
 	return emojis[random.randint(0,len(emojis)-1)]
 
@@ -31,70 +35,100 @@ def isNum(char):
 
 def findStickerNumInUrl(string):
 	allSplit = string.split("/")
+	temp = [i.split("?") for i in allSplit]
+	for i in temp:
+		allSplit += i
 
+	print(allSplit)
 	if string.find("sticonshop") == -1:
 		for i in allSplit:
 			ok = True
+
 			for j in i:
 				if not isNum(j):
 					ok = False
 
 			if ok and len(i)>0:
 				return i
-	else:
-		for i in range(len(allSplit)):
-			if allSplit[i] == "sticon":
-				return allSplit[i+1]
 
+	for i in range(len(allSplit)):
+		if allSplit[i] == "sticon":
+			return allSplit[i+1]
+
+		if allSplit[i] == "product":
+			return allSplit[i+1]
+		
 
 	return -1
 
-
-
-def main_handle(sticker_number,chat_id,main_message,all_stickers,title):
+def getPack(sticker_number):
+	a_len = -1
+	a = 0
 	try:
 		a = bot.getStickerSet(name="line"+str(sticker_number)+"_by_RekcitsEnilbot")
 		a_len = len(a.stickers)
-		status = 1
 	except:
-		a = 0
 		a_len=0
+
+	return a_len, a
+
+def main_handle(sticker_number,chat_id,main_message,all_stickers,title):
+
+	if str(sticker_number) == "-1":
+		print("no sticker number")
+		bot.editMessageText(chat_id = chat_id,
+						message_id = main_message,
+						text = "沒有貼圖編號，無法建立貼圖包。\n\nThere isn't any sticker number so I can't create sticker pack.")
+		return
+	a_len, a = getPack(sticker_number)
+	status = 0
+	if a_len == 0:
 		status = -1
+	else:
+		status = 1
 
 
-	global continue_handle 
-	continue_handle = True
-	threading.Timer(20,con_req,[sticker_number,chat_id,main_message,all_stickers,title]).start()
-	
+	start_time = time.time()
+	#threading.Timer(20,con_req,[sticker_number,chat_id,main_message,all_stickers,title]).start()
+	#con_timer = threading.Timer(give_up_time,con_req,[sticker_number,chat_id,main_message,all_stickers,title])
+	#con_timer.start()
 
 	head_sticker=0
 	temp_message = title+"\n發現"+str(len(all_stickers))+"張貼圖\n\nFound "+str(len(all_stickers))+" stickers\n"
 	for i in range(a_len,len(all_stickers)):
-		if continue_handle == False:
-			return
 		z = requests.get(all_stickers[i]).content
-		open('temp.png', 'wb').write(z)
-		img = Image.open('temp.png').convert('RGBA')
+		open('temp'+str(i)+'.png', 'wb').write(z)
+		img = Image.open('temp'+str(i)+'.png').convert('RGBA')
 		arr = np.array(img)
 		mag=512/max(len(arr[0]),len(arr))
-		new_arr = handle_image(mag,arr)
-		Image.fromarray(new_arr, 'RGBA').save("output"+str(i)+".png")
-
+		#new_arr = handle_image(mag,arr)
+		#Image.fromarray(new_arr, 'RGBA').save("output"+str(i)+".png")
+		img.resize((round(len(arr[0])*mag), round(len(arr)*mag)),Image.ANTIALIAS).save("output"+str(i)+".png")
 		sticker = bot.uploadStickerFile(user_id = chat_id,
 								png_sticker=open("output"+str(i)+".png", 'rb')).file_id
 		rnd_emoji = random_emoji()
 		if i==0 and status == -1:
 			head_sticker = sticker
-			bot.createNewStickerSet(user_id=chat_id,
-									name = "line"+str(sticker_number)+"_by_RekcitsEnilbot",
-									title = title+" @RekcitsEnilbot",
-									png_sticker = sticker,
-									emojis = rnd_emoji)
+			print(sticker_number)
+			print("line"+str(sticker_number)+"_by_RekcitsEnilbot")
+			try:
+				bot.createNewStickerSet(user_id=chat_id,
+										name = "line"+str(sticker_number)+"_by_RekcitsEnilbot",
+										title = title+" @RekcitsEnilbot",
+										png_sticker = sticker,
+										emojis = rnd_emoji)
+			except:
+				#con_timer.cancel()
+				return
 		else:
-			if len(bot.getStickerSet(name="line"+str(sticker_number)+"_by_RekcitsEnilbot").stickers) != i:
-				bot.editMessageText(chat_id = chat_id,
-									message_id = main_message,
-									text = "出了點問題，具體來說是同時有兩個在上傳貼圖\n\nError:Multi thread is not available.")
+			a_len, a = getPack(sticker_number)
+			if a_len != i:
+				bot.deleteMessage(chat_id = chat_id,
+				 					message_id = main_message)
+				#con_timer.cancel()
+				# bot.editMessageText(chat_id = chat_id,
+				# 					message_id = main_message,
+				# 					text = "出了點問題，具體來說是同時有兩個在上傳貼圖\n\nError:Multi thread is not available.")
 				return 
 			bot.addStickerToSet(user_id=chat_id,
 								name = "line"+str(sticker_number)+"_by_RekcitsEnilbot",
@@ -110,10 +144,15 @@ def main_handle(sticker_number,chat_id,main_message,all_stickers,title):
 		for j in range(len(all_stickers)-i-1):
 			temp_message2 += "_"
 		temp_message2 += str(i+1)+"/" + str(len(all_stickers))
-		bot.editMessageText(chat_id = chat_id,
+		try:
+			bot.editMessageText(chat_id = chat_id,
 						message_id = main_message,
 						text = temp_message2)
-	continue_handle = False
+		except:
+			pass
+		if time.time() - start_time > give_up_time:
+			return
+	#con_timer.cancel()
 	bot.sendMessage(chat_id = chat_id,
 						text = "噠啦～☆\n\nFinished!"+"\n\nLine sticker number:"+str(sticker_number)+"\nhttps://t.me/addstickers/line"+str(sticker_number)+"_by_RekcitsEnilbot")
 	if head_sticker == 0:
@@ -126,35 +165,36 @@ def main_handle(sticker_number,chat_id,main_message,all_stickers,title):
 	return 
 
 def main_handle_for_message_sticker(sticker_number,chat_id,main_message,all_stickers,title):
-	try:
-		a = bot.getStickerSet(name="line"+str(sticker_number)+"_by_RekcitsEnilbot")
-		a_len = len(a.stickers)
-		status = 1
-		print("find ok")
-	except:
-		a = 0
-		a_len=0
-		status = -1
-		print("find failed")
+	if str(sticker_number) == "-1":
+		print("no sticker number")
+		bot.editMessageText(chat_id = chat_id,
+						message_id = main_message,
+						text = "沒有貼圖編號，無法建立貼圖包。\n\nThere isn't any sticker number so I can't create sticker pack.")
+		return
 
-	global continue_handle 
-	continue_handle = True
-	threading.Timer(20,con_req_for_massage_sticker,[sticker_number,chat_id,main_message,all_stickers,title]).start()
-	
+	a_len, a = getPack(sticker_number)
+	status = 0
+	if a_len == 0:
+		status = -1
+	else:
+		status = 1
+
+	start_time = time.time()
+	#threading.Timer(20,con_req_for_massage_sticker,[sticker_number,chat_id,main_message,all_stickers,title]).start()
+	#con_timer = threading.Timer(give_up_time,con_req_for_massage_sticker,[sticker_number,chat_id,main_message,all_stickers,title])
+	#con_timer.start()
 
 	head_sticker=0
 	temp_message = title+"\n發現"+str(len(all_stickers))+"張貼圖\n\nFound "+str(len(all_stickers))+" stickers\n"
 	for i in range(a_len,len(all_stickers)):
-		if continue_handle == False:
-			return
 		z = requests.get(all_stickers[i][0]).content
-		open('temp1.png', 'wb').write(z)
-		img = Image.open('temp1.png').convert('RGBA')
+		open('temp1'+str(i)+'.png', 'wb').write(z)
+		img = Image.open('temp1'+str(i)+'.png').convert('RGBA')
 		base = np.array(img)
 
 		z = requests.get(all_stickers[i][1]).content
-		open('temp2.png', 'wb').write(z)
-		img = Image.open('temp2.png').convert('RGBA')
+		open('temp2'+str(i)+'.png', 'wb').write(z)
+		img = Image.open('temp2'+str(i)+'.png').convert('RGBA')
 		text = np.array(img)
 
 		for ii in range(len(base)):
@@ -165,8 +205,10 @@ def main_handle_for_message_sticker(sticker_number,chat_id,main_message,all_stic
 		
 
 		mag=512/max(len(base[0]),len(base))
-		new_arr = handle_image(mag,base)
-		Image.fromarray(new_arr, 'RGBA').save("output"+str(i)+".png")
+		#new_arr = handle_image(mag,base)
+		#Image.fromarray(new_arr, 'RGBA').save("output"+str(i)+".png")
+		Image.fromarray(base, 'RGBA').resize((round(len(base[0])*mag), round(len(base)*mag)),Image.ANTIALIAS).save("output"+str(i)+".png")
+
 
 		sticker = bot.uploadStickerFile(user_id = chat_id,
 								png_sticker=open("output"+str(i)+".png", 'rb')).file_id
@@ -179,10 +221,14 @@ def main_handle_for_message_sticker(sticker_number,chat_id,main_message,all_stic
 									png_sticker = sticker,
 									emojis = rnd_emoji)
 		else:
-			if len(bot.getStickerSet(name="line"+str(sticker_number)+"_by_RekcitsEnilbot").stickers) != i:
-				bot.editMessageText(chat_id = chat_id,
-									message_id = main_message,
-									text = "出了點問題，具體來說是同時有兩個在上傳貼圖\n\nError:Multi thread is not available.")
+			a_len, a = getPack(sticker_number)
+			if a_len != i:
+				bot.deleteMessage(chat_id = chat_id,
+				 					message_id = main_message)
+				#con_timer.cancel()
+				# bot.editMessageText(chat_id = chat_id,
+				# 					message_id = main_message,
+				# 					text = "出了點問題，具體來說是同時有兩個在上傳貼圖\n\nError:Multi thread is not available.")
 				return 
 			bot.addStickerToSet(user_id=chat_id,
 								name = "line"+str(sticker_number)+"_by_RekcitsEnilbot",
@@ -198,10 +244,16 @@ def main_handle_for_message_sticker(sticker_number,chat_id,main_message,all_stic
 		for j in range(len(all_stickers)-i-1):
 			temp_message2 += "_"
 		temp_message2 += str(i+1)+"/" + str(len(all_stickers))
-		bot.editMessageText(chat_id = chat_id,
+		try:
+			bot.editMessageText(chat_id = chat_id,
 						message_id = main_message,
 						text = temp_message2)
-	continue_handle = False
+		except:
+			pass
+
+		if time.time() - start_time > give_up_time:
+			return
+	#con_timer.cancel()
 	bot.sendMessage(chat_id = chat_id,
 						text = "噠啦～☆\n\nFinished!"+"\n\nLine sticker number:"+str(sticker_number)+"\nhttps://t.me/addstickers/line"+str(sticker_number)+"_by_RekcitsEnilbot")
 	if head_sticker == 0:
@@ -215,11 +267,9 @@ def main_handle_for_message_sticker(sticker_number,chat_id,main_message,all_stic
 
 
 
-continue_handle = False
 def con_req(sticker_number,chat_id,main_message,all_stickers,title):
-	global continue_handle
-	if continue_handle == True:
-		continue_handle=False
+	a_len, a = getPack(sticker_number)
+	if a_len < len(all_stickers):
 		data={
 			"sticker_number":sticker_number,
 			"chat_id":chat_id,
@@ -227,8 +277,8 @@ def con_req(sticker_number,chat_id,main_message,all_stickers,title):
 			"all_stickers":json.dumps(all_stickers),
 			"title":title
 		}
-		#requests.post("https://rekcits.herokuapp.com/continue",data=data)
-		requests.post("https://06775bc4b6d1.ngrok.io/continue",data=data)
+		requests.post("https://rekcits.herokuapp.com/continue",data=data)
+		#requests.post("https://06775bc4b6d1.ngrok.io/continue",data=data)
 
 	else:
 		return
@@ -236,9 +286,8 @@ def con_req(sticker_number,chat_id,main_message,all_stickers,title):
 
 
 def con_req_for_massage_sticker(sticker_number,chat_id,main_message,all_stickers,title):
-	global continue_handle
-	if continue_handle == True:
-		continue_handle=False
+	a_len, a = getPack(sticker_number)
+	if a_len < len(all_stickers):
 		data={
 			"sticker_number":sticker_number,
 			"chat_id":chat_id,
@@ -246,8 +295,8 @@ def con_req_for_massage_sticker(sticker_number,chat_id,main_message,all_stickers
 			"all_stickers":json.dumps(all_stickers),
 			"title":title
 		}
-		#requests.post("https://rekcits.herokuapp.com/continue",data=data)
-		requests.post("https://06775bc4b6d1.ngrok.io/continue2",data=data)
+		requests.post("https://rekcits.herokuapp.com/continue2",data=data)
+		#requests.post("https://06775bc4b6d1.ngrok.io/continue2",data=data)
 
 	else:
 		return
@@ -265,6 +314,21 @@ def continue2_():
 	threading.Timer(0,main_handle_for_message_sticker,[all_data["sticker_number"],all_data["chat_id"],all_data["main_message"],json.loads(all_data["all_stickers"]),all_data["title"]]).start()
 	return 'ok'
 
+@jit(nopython=True)
+def equalStr(a, b):
+	if len(a)!=len(b):
+		return False
+	for i in range(len(a)):
+		if a[i] != b[i]:
+			return False
+	return True
+
+@jit(nopython=True)
+def aIsInb(a, b):
+	for i in b:
+		if equalStr(a,i):
+			return True
+	return False
 
 @jit(nopython=True)
 def find_sticker_sites(text):
@@ -287,8 +351,14 @@ def find_sticker_sites(text):
 			add = text[:text.find('.png')+4]
 			all_sticker.append(add)
 			x = text.find('"mdCMN09Image FnCustomBase"')
+	
+	out = []
 
-	return all_sticker[1:]
+	for i in all_sticker[1:]:
+		if not aIsInb(i, out):
+			out.append(i)
+
+	return out
 
 
 @jit(nopython=True)
@@ -312,7 +382,13 @@ def find_message_sticker_sites(text):
 		all_sticker.append(temp)
 		x = text.find('"mdCMN09Li FnStickerPreviewItem"')
 
-	return all_sticker[1:]
+	out = []
+
+	for i in all_sticker[1:]:
+		if not aIsInb(i, out):
+			out.append(i)
+
+	return out
 
 
 
@@ -333,10 +409,10 @@ def help_(bot,update):
 	bot.sendMessage(chat_id = update.message.chat.id,
 					text = "直接傳網址給我就可以惹\nJust send me the URL.\n\n像這個Like this:https://store.line.me/stickershop/product/3962468/ja")
 	bot.sendMessage(chat_id = update.message.chat.id,
-					text = "如果是有錯誤或問題就找 @Homura343\nWhen in doubt, @Homura343 .")
+					text = "如果是有錯誤或問題就到這\n https://t.me/ArumohChannelGroup\nWhen in doubt, https://t.me/ArumohChannelGroup .")
 def about(bot,update):
 	bot.sendMessage(chat_id = update.message.chat.id,
-						text = "Author:@Homura343\nGithub:https://github.com/Mescury/Teleline-sticker-converter\n")
+						text="Author:@Homura343\nChannel:https://t.me/ArumohChannel\nChannel Group:https://t.me/ArumohChannelGroup\nGithub:https://github.com/Mescury/Teleline-sticker-converter\n")
 
 
 
@@ -381,19 +457,19 @@ def reply_handler(bot, update):
 		# 	temp = text.find("sticker")
 		# 	temp = text[temp+8:]
 		# sticker_number = temp[:temp.find("/")]
-		sticker_number = findStickerNumInUrl(all_stickers[0])
-
+		sticker_number = findStickerNumInUrl(text)
+		print(sticker_number)
 		title = find_ex(find_ex(n.text,"head"),"title")[6:find_ex(find_ex(n.text,"head"),"title")[:].find("LINE")-2].replace("&amp;","&")
 
 		#Check if sticker exist
-		try:
-			a = bot.getStickerSet(name="line"+str(sticker_number)+"_by_RekcitsEnilbot")
-			a_len = len(a.stickers)
-			status = 1
-		except:
-			a = 0
-			a_len=0
+		a_len, a = getPack(sticker_number)
+		status = 0
+		if a_len == 0:
 			status = -1
+		else:
+			status = 1
+
+
 		if status == 1:
 			if len(a.stickers) != len(all_stickers):
 				bot.editMessageText(chat_id = update.message.chat.id,
@@ -424,6 +500,7 @@ def reply_handler(bot, update):
 	else:
 
 		all_stickers = find_message_sticker_sites(n.text)
+		#print(n.text)
 
 		print(len(all_stickers))
 		if len(all_stickers)==0:
@@ -432,21 +509,20 @@ def reply_handler(bot, update):
 							text = "沒有找到任何Line貼圖？！\n\nCan't find any line sticker?!")
 			return
 
-		sticker_number = findStickerNumInUrl(all_stickers[0][0])
+		sticker_number = findStickerNumInUrl(text)
 
 		print(sticker_number)
 
 		title = find_ex(find_ex(n.text,"head"),"title")[6:find_ex(find_ex(n.text,"head"),"title")[:].find("LINE")-2].replace("&amp;","&")
 
 		#Check if sticker exist
-		try:
-			a = bot.getStickerSet(name="line"+str(sticker_number)+"_by_RekcitsEnilbot")
-			a_len = len(a.stickers)
-			status = 1
-		except:
-			a = 0
-			a_len=0
+		a_len, a = getPack(sticker_number)
+		status = 0
+		if a_len == 0:
 			status = -1
+		else:
+			status = 1
+
 		if status == 1:
 			if len(a.stickers) != len(all_stickers):
 				bot.editMessageText(chat_id = update.message.chat.id,

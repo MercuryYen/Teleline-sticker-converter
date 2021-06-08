@@ -7,7 +7,7 @@ verify_ssl = true
 
 [packages]
 python-telegram-bot = "*"
-pillow = "==7.1.0"
+pillow = "==8.2.0"
 requests = "*"
 numpy = "*"
 numba = "*"

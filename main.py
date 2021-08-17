@@ -1,7 +1,5 @@
 #coding = unicode
-import time
 import configparser
-from mag import handle_image
 import requests
 from PIL import Image
 import numpy as np
@@ -24,8 +22,6 @@ bot = telegram.Bot(token=(config['TELEGRAM']['ACCESS_TOKEN']))
 
 emojis = "😂😘😍😊😁😔😄😭😒😳😜😉😃😢😝😱😡😏😞😅😚😌😀😋😆😐😕👍👌👿❤🖤💤🎵🔞"
 
-give_up_time = 23
-
 def random_emoji():
 	return emojis[random.randint(0,len(emojis)-1)]
 
@@ -33,11 +29,16 @@ def random_emoji():
 def isNum(char):
 	return ord('0')<=ord(char) and ord(char) <= ord('9')
 
+def list_of_string_split(list_of_string, split_by):
+	output = []
+	for i in list_of_string:
+		output += i.split(split_by)
+	return [i for i in output if i != ""]
+
 def findStickerNumInUrl(string):
-	allSplit = string.split("/")
-	temp = [i.split("?") for i in allSplit]
-	for i in temp:
-		allSplit += i
+	allSplit = list_of_string_split([string], "/")
+	allSplit = list_of_string_split(allSplit, "=")
+	allSplit = list_of_string_split(allSplit, "?")
 
 	print(allSplit)
 	if string.find("sticonshop") == -1:
@@ -57,7 +58,6 @@ def findStickerNumInUrl(string):
 
 		if allSplit[i] == "product":
 			return allSplit[i+1]
-		
 
 	return -1
 
@@ -67,7 +67,8 @@ def getPack(sticker_number):
 	try:
 		a = bot.getStickerSet(name="line"+str(sticker_number)+"_by_RekcitsEnilbot")
 		a_len = len(a.stickers)
-	except:
+	except Exception as e:
+		print(e)
 		a_len=0
 
 	return a_len, a
@@ -87,12 +88,6 @@ def main_handle(sticker_number,chat_id,main_message,all_stickers,title):
 	else:
 		status = 1
 
-
-	start_time = time.time()
-	#threading.Timer(20,con_req,[sticker_number,chat_id,main_message,all_stickers,title]).start()
-	#con_timer = threading.Timer(give_up_time,con_req,[sticker_number,chat_id,main_message,all_stickers,title])
-	#con_timer.start()
-
 	head_sticker=0
 	temp_message = title+"\n發現"+str(len(all_stickers))+"張貼圖\n\nFound "+str(len(all_stickers))+" stickers\n"
 	for i in range(a_len,len(all_stickers)):
@@ -103,7 +98,16 @@ def main_handle(sticker_number,chat_id,main_message,all_stickers,title):
 		mag=512/max(len(arr[0]),len(arr))
 		#new_arr = handle_image(mag,arr)
 		#Image.fromarray(new_arr, 'RGBA').save("output"+str(i)+".png")
-		img.resize((round(len(arr[0])*mag), round(len(arr)*mag)),Image.ANTIALIAS).save("output"+str(i)+".png")
+
+		newY = round(len(arr)*mag)
+		newX = round(len(arr[0])*mag)
+
+		if newX>512:
+			newX=512
+		if newY>512:
+			newY=512
+
+		img.resize((newX, newY),Image.ANTIALIAS).save("output"+str(i)+".png")
 		sticker = bot.uploadStickerFile(user_id = chat_id,
 								png_sticker=open("output"+str(i)+".png", 'rb')).file_id
 		rnd_emoji = random_emoji()
@@ -117,15 +121,14 @@ def main_handle(sticker_number,chat_id,main_message,all_stickers,title):
 										title = title+" @RekcitsEnilbot",
 										png_sticker = sticker,
 										emojis = rnd_emoji)
-			except:
-				#con_timer.cancel()
+			except Exception as e: 
+				print(e)
 				return
 		else:
 			a_len, a = getPack(sticker_number)
 			if a_len != i:
 				bot.deleteMessage(chat_id = chat_id,
-				 					message_id = main_message)
-				#con_timer.cancel()
+									message_id = main_message)
 				# bot.editMessageText(chat_id = chat_id,
 				# 					message_id = main_message,
 				# 					text = "出了點問題，具體來說是同時有兩個在上傳貼圖\n\nError:Multi thread is not available.")
@@ -148,11 +151,9 @@ def main_handle(sticker_number,chat_id,main_message,all_stickers,title):
 			bot.editMessageText(chat_id = chat_id,
 						message_id = main_message,
 						text = temp_message2)
-		except:
-			pass
-		if time.time() - start_time > give_up_time:
-			return
-	#con_timer.cancel()
+		except Exception as e: 
+			print(e)
+
 	bot.sendMessage(chat_id = chat_id,
 						text = "噠啦～☆\n\nFinished!"+"\n\nLine sticker number:"+str(sticker_number)+"\nhttps://t.me/addstickers/line"+str(sticker_number)+"_by_RekcitsEnilbot")
 	if head_sticker == 0:
@@ -178,11 +179,6 @@ def main_handle_for_message_sticker(sticker_number,chat_id,main_message,all_stic
 		status = -1
 	else:
 		status = 1
-
-	start_time = time.time()
-	#threading.Timer(20,con_req_for_massage_sticker,[sticker_number,chat_id,main_message,all_stickers,title]).start()
-	#con_timer = threading.Timer(give_up_time,con_req_for_massage_sticker,[sticker_number,chat_id,main_message,all_stickers,title])
-	#con_timer.start()
 
 	head_sticker=0
 	temp_message = title+"\n發現"+str(len(all_stickers))+"張貼圖\n\nFound "+str(len(all_stickers))+" stickers\n"
@@ -224,8 +220,7 @@ def main_handle_for_message_sticker(sticker_number,chat_id,main_message,all_stic
 			a_len, a = getPack(sticker_number)
 			if a_len != i:
 				bot.deleteMessage(chat_id = chat_id,
-				 					message_id = main_message)
-				#con_timer.cancel()
+									message_id = main_message)
 				# bot.editMessageText(chat_id = chat_id,
 				# 					message_id = main_message,
 				# 					text = "出了點問題，具體來說是同時有兩個在上傳貼圖\n\nError:Multi thread is not available.")
@@ -248,12 +243,9 @@ def main_handle_for_message_sticker(sticker_number,chat_id,main_message,all_stic
 			bot.editMessageText(chat_id = chat_id,
 						message_id = main_message,
 						text = temp_message2)
-		except:
-			pass
+		except Exception as e:
+			print(e)
 
-		if time.time() - start_time > give_up_time:
-			return
-	#con_timer.cancel()
 	bot.sendMessage(chat_id = chat_id,
 						text = "噠啦～☆\n\nFinished!"+"\n\nLine sticker number:"+str(sticker_number)+"\nhttps://t.me/addstickers/line"+str(sticker_number)+"_by_RekcitsEnilbot")
 	if head_sticker == 0:
@@ -282,37 +274,6 @@ def con_req(sticker_number,chat_id,main_message,all_stickers,title):
 
 	else:
 		return
-
-
-
-def con_req_for_massage_sticker(sticker_number,chat_id,main_message,all_stickers,title):
-	a_len, a = getPack(sticker_number)
-	if a_len < len(all_stickers):
-		data={
-			"sticker_number":sticker_number,
-			"chat_id":chat_id,
-			"main_message":main_message,
-			"all_stickers":json.dumps(all_stickers),
-			"title":title
-		}
-		requests.post("https://rekcits.herokuapp.com/continue2",data=data)
-		#requests.post("https://06775bc4b6d1.ngrok.io/continue2",data=data)
-
-	else:
-		return
-
-
-@app.route('/continue',methods=['POST'])
-def continue_():
-	all_data = request.form
-	threading.Timer(0,main_handle,[all_data["sticker_number"],all_data["chat_id"],all_data["main_message"],json.loads(all_data["all_stickers"]),all_data["title"]]).start()
-	return 'ok'
-
-@app.route('/continue2',methods=['POST'])
-def continue2_():
-	all_data = request.form
-	threading.Timer(0,main_handle_for_message_sticker,[all_data["sticker_number"],all_data["chat_id"],all_data["main_message"],json.loads(all_data["all_stickers"]),all_data["title"]]).start()
-	return 'ok'
 
 @jit(nopython=True)
 def equalStr(a, b):
@@ -399,20 +360,29 @@ def find_ex(string,key_string):
 
 
 def start(bot,update):
-	bot.sendMessage(chat_id = update.message.chat.id,
+	try:
+		bot.sendMessage(chat_id = update.message.chat.id,
 						text = "這個Bot可以將Line上的貼圖轉換成telegram上的貼圖，將貼圖商店的網址貼上來就會自動轉換了\n"+
 						"This bot can transform Line's stickers to Telegram's sticker. Post line-store's URL to convert.\n\n"+
 						"範例example：https://store.line.me/stickershop/product/3962468/ja")
+	except Exception as e:
+		print(e)
+	
 
 def help_(bot,update):
-
-	bot.sendMessage(chat_id = update.message.chat.id,
-					text = "直接傳網址給我就可以惹\nJust send me the URL.\n\n像這個Like this:https://store.line.me/stickershop/product/3962468/ja")
-	bot.sendMessage(chat_id = update.message.chat.id,
-					text = "如果是有錯誤或問題就到這\n https://t.me/ArumohChannelGroup\nWhen in doubt, https://t.me/ArumohChannelGroup .")
+	try:
+		bot.sendMessage(chat_id = update.message.chat.id,
+						text = "直接傳網址給我就可以惹\nJust send me the URL.\n\n像這個Like this:https://store.line.me/stickershop/product/3962468/ja")
+		bot.sendMessage(chat_id = update.message.chat.id,
+						text = "如果是有錯誤或問題就到這\n https://t.me/ArumohChannelGroup\nWhen in doubt, https://t.me/ArumohChannelGroup .")
+	except Exception as e:
+		print(e)
 def about(bot,update):
-	bot.sendMessage(chat_id = update.message.chat.id,
+	try:
+		bot.sendMessage(chat_id = update.message.chat.id,
 						text="Author:@Homura343\nChannel:https://t.me/ArumohChannel\nChannel Group:https://t.me/ArumohChannelGroup\nGithub:https://github.com/Mescury/Teleline-sticker-converter\n")
+	except Exception as e:
+		print(e)
 
 
 
@@ -433,12 +403,16 @@ def reply_handler(bot, update):
 
 	text = update.message.text
 
-	main_message = bot.sendMessage(chat_id = update.message.chat.id,
+	try:
+		main_message = bot.sendMessage(chat_id = update.message.chat.id,
 						text = "正在試試看這東西\n\nTrying this.").message_id
+	except Exception as e:
+		print(e)
 	print(text)
 	try:
 		n = requests.get(text)
-	except:
+	except Exception as e:
+		print(e)
 		bot.editMessageText(chat_id = update.message.chat.id,
 							message_id = main_message,
 							text = "無效網址\n\nInvalid URL")
@@ -449,6 +423,8 @@ def reply_handler(bot, update):
 	if len(all_stickers)!=0:
 
 		print(len(all_stickers))
+		if len(all_stickers)>=5:
+			print(all_stickers[:5])
 
 		# temp = text.find("product")
 		# if temp!=-1:
@@ -459,7 +435,10 @@ def reply_handler(bot, update):
 		# sticker_number = temp[:temp.find("/")]
 		sticker_number = findStickerNumInUrl(text)
 		print(sticker_number)
-		title = find_ex(find_ex(n.text,"head"),"title")[6:find_ex(find_ex(n.text,"head"),"title")[:].find("LINE")-2].replace("&amp;","&")
+		#title = find_ex(find_ex(n.text,"head"),"title")[6:find_ex(find_ex(n.text,"head"),"title")[:].find("LINE")-2].replace("&amp;","&")
+		title = find_ex(n.text, "sticker-name-title")[20:]
+		title = title[:title.find("</p>")]
+		print(title)
 
 		#Check if sticker exist
 		a_len, a = getPack(sticker_number)
@@ -513,7 +492,10 @@ def reply_handler(bot, update):
 
 		print(sticker_number)
 
-		title = find_ex(find_ex(n.text,"head"),"title")[6:find_ex(find_ex(n.text,"head"),"title")[:].find("LINE")-2].replace("&amp;","&")
+		#title = find_ex(find_ex(n.text,"head"),"title")[6:find_ex(find_ex(n.text,"head"),"title")[:].find("LINE")-2].replace("&amp;","&")
+		title = find_ex(n.text, "sticker-name-title")[20:]
+		title = title[:title.find("</p>")]
+		print(title)
 
 		#Check if sticker exist
 		a_len, a = getPack(sticker_number)

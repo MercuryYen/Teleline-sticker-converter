@@ -288,7 +288,7 @@ def process_text(access_token, user_id, text, output_message_id):
 				new_sticker_name = f"backup_{backup_count}_{sticker_name}"
 				backup_count = backup_count + 1
 
-			elif str(e) == "Pack_short_name_occupied":
+			elif str(e) == "Sticker set name is already occupied":
 				# We found the sticker set!!!!!
 				sticker_name = new_sticker_name
 

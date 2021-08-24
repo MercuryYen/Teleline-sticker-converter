@@ -227,73 +227,20 @@ def process_text(access_token, user_id, text, output_message_id):
 
 	sticker_name = get_sticker_name_from_sticker_number(bot, sticker_number)
 
-	# check if there has been a sticker set
-	sticker_set = get_sticker_set(bot, sticker_name)
+	# a loop to find a valid sticker set name
+	is_valid_sticker_name = False
+	while not is_valid_sticker_name:
 
-	# three conditions:
-	# 1. no sticker set -> upload stickers
-	# 2. exist sticker set, and sticker set finished uploading -> return finished sticker set
-	# 3. exist sticker set, but sticker set didn't finish uploading -> delete old sticker set and upload stickers
-	if sticker_set != None:
-		# condition 2
-		if len(sticker_set.stickers) == len(urls):
-			bot.edit_message_text(	chat_id = user_id,
-									message_id = output_message_id,
-									text = (	f"總算找到了\n"
-												f"This one?!\n\n"
-												f"Line sticker number:{sticker_number}"))
+		# check if there has been a sticker set
+		sticker_set = get_sticker_set(bot, sticker_name)
 
-			bot.send_sticker(	chat_id = user_id,
-								sticker = sticker_set.stickers[0].file_id,
-								reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(	text = title, 
-																							url = f"https://t.me/addstickers/{sticker_name}")]]))
-			return
-		# condition 3
-		else:
-			delete_sticker_set(bot, sticker_set)
-
-	# upload
-
-	upload_static_text = (	f"{title}\n"
-							f"發現{len(urls)}張貼圖\n\n"
-							f"Found {len(urls)} stickers\n")
-
-	# first image for creating a sticker set
-	sticker_image = get_sticker_image_from_url(is_message_sticker, urls[0])
-
-	sticker_image.save(f"{sticker_number}.png")
-	sticker0 = bot.upload_sticker_file(	user_id = user_id,
-										png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
-	# create a sticker set
-	is_create_sticker_set_success = False
-	backup_count = 0
-	new_sticker_name = sticker_name
-
-	while not is_create_sticker_set_success:
-
-		try:
-			bot.create_new_sticker_set(	user_id = user_id,
-										name = new_sticker_name,
-										title = f"{title} @RekcitsEnilbot",
-										png_sticker = sticker0,
-										emojis = get_random_emoji())
-			is_create_sticker_set_success = True
-			sticker_name = new_sticker_name
-
-		except BadRequest as e:
-
-			if str(e) == "Shortname_occupy_failed":
-				# A special error that I don't know what cause it.
-				# Telegram say that this is an internal error.....
-				new_sticker_name = f"backup_{backup_count}_{sticker_name}"
-				backup_count = backup_count + 1
-
-			elif str(e) == "Sticker set name is already occupied":
-				# We found the sticker set!!!!!
-				sticker_name = new_sticker_name
-
-				sticker_set = get_sticker_set(bot, sticker_name)
-
+		# three conditions:
+		# 1. no sticker set -> upload stickers
+		# 2. exist sticker set, and sticker set finished uploading -> return finished sticker set
+		# 3. exist sticker set, but sticker set didn't finish uploading -> delete old sticker set and upload stickers
+		if sticker_set != None:
+			# condition 2
+			if len(sticker_set.stickers) == len(urls):
 				bot.edit_message_text(	chat_id = user_id,
 										message_id = output_message_id,
 										text = (	f"總算找到了\n"
@@ -305,10 +252,54 @@ def process_text(access_token, user_id, text, output_message_id):
 									reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(	text = title, 
 																								url = f"https://t.me/addstickers/{sticker_name}")]]))
 				return
+			# condition 3
 			else:
-				print("??????")
-				print(e)
-				return
+				delete_sticker_set(bot, sticker_set)
+
+		# upload
+
+		upload_static_text = (	f"{title}\n"
+								f"發現{len(urls)}張貼圖\n\n"
+								f"Found {len(urls)} stickers\n")
+
+		# first image for creating a sticker set
+		sticker_image = get_sticker_image_from_url(is_message_sticker, urls[0])
+
+		sticker_image.save(f"{sticker_number}.png")
+		sticker0 = bot.upload_sticker_file(	user_id = user_id,
+											png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
+		# create a sticker set
+		is_create_sticker_set_success = False
+		backup_count = 0
+		new_sticker_name = sticker_name
+
+		while not is_create_sticker_set_success:
+
+			try:
+				bot.create_new_sticker_set(	user_id = user_id,
+											name = new_sticker_name,
+											title = f"{title} @RekcitsEnilbot",
+											png_sticker = sticker0,
+											emojis = get_random_emoji())
+				is_create_sticker_set_success = True
+				is_valid_sticker_name = True
+				sticker_name = new_sticker_name
+
+			except BadRequest as e:
+
+				if str(e) == "Shortname_occupy_failed":
+					# A special error that I don't know what cause it.
+					# Telegram say that this is an internal error.....
+					new_sticker_name = f"backup_{backup_count}_{sticker_name}"
+					backup_count = backup_count + 1
+
+				elif str(e) == "Sticker set name is already occupied":
+					# We found a new sticker name!!
+					sticker_name = new_sticker_name
+				else:
+					print("??????")
+					print(e)
+					return
 
 
 	# the left images to be uploaded

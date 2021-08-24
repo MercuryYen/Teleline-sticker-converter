@@ -191,7 +191,9 @@ def get_sticker_image_from_url(is_message_sticker, url):
 
 # main procession of text
 # get page from text, extract sticker's image urls, download image, resize image, upload image
-def process_text(bot, user_id, text, output_message_id):
+def process_text(access_token, user_id, text, output_message_id):
+
+	bot = telegram.Bot(token=access_token)
 
 	# check if text is valid
 	try:
@@ -335,7 +337,7 @@ def text(update: Update, context: CallbackContext):
 	message = update.message.reply_text(text = (	"正在試試看這東西\n"
 													"Testing this message."))
 
-	q.enqueue(process_text, update.message.bot, update.effective_message.chat_id, update.message.text, message.message_id)
+	q.enqueue(process_text, update.message.bot.token, update.effective_message.chat_id, update.message.text, message.message_id)
 	return
 
 # TeleLine's Dispatcher

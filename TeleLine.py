@@ -305,6 +305,11 @@ def process_text(access_token, user_id, text, output_message_id):
 									reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(	text = title, 
 																								url = f"https://t.me/addstickers/{sticker_name}")]]))
 				return
+			else:
+				print("??????")
+				print(e)
+				return
+
 
 	# the left images to be uploaded
 	for idx, url in enumerate(urls[1:]):
@@ -319,10 +324,10 @@ def process_text(access_token, user_id, text, output_message_id):
 								png_sticker = sticker,
 								emojis = get_random_emoji())
 
-		upload_text = f"{upload_static_text}{'*' * (idx + 1)}{'_' * (len(urls) - (idx + 1))}{idx + 1}/{len(urls)}"
-		bot.edit_message_text(chat_id = user_id,
-							message_id = output_message_id,
-							text = upload_text)
+		upload_text = f"{upload_static_text}{'*' * (idx + 2)}{'_' * (len(urls) - (idx + 2))}{idx + 2}/{len(urls)}"
+		bot.edit_message_text(	chat_id = user_id,
+								message_id = output_message_id,
+								text = upload_text)
 
 	# delete temporary file
 	os.remove(f"{sticker_number}.png")

@@ -231,6 +231,8 @@ def process_text(access_token, user_id, text, output_message_id):
 	is_create_sticker_set_success = False
 	while not is_create_sticker_set_success:
 
+		print(sticker_name)
+
 		# check if there has been a sticker set
 		sticker_set = get_sticker_set(bot, sticker_name)
 

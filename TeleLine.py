@@ -282,13 +282,13 @@ def process_text(access_token, user_id, text, output_message_id):
 
 		except BadRequest as e:
 
-			if e.msg == "Shortname_occupy_failed":
+			if str(e) == "Shortname_occupy_failed":
 				# A special error that I don't know what cause it.
 				# Telegram say that this is an internal error.....
 				new_sticker_name = f"backup_{backup_count}_{sticker_name}"
 				backup_count = backup_count + 1
 
-			elif e.msg == "Pack_short_name_occupied"
+			elif str(e) == "Pack_short_name_occupied"
 				# We found the sticker set!!!!!
 				sticker_name = new_sticker_name
 

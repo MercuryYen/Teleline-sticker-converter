@@ -268,11 +268,43 @@ def process_text(access_token, user_id, text, output_message_id):
 	sticker0 = bot.upload_sticker_file(	user_id = user_id,
 										png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
 	# create a sticker set
-	bot.create_new_sticker_set(	user_id = user_id,
-								name = sticker_name,
-								title = f"{title} @RekcitsEnilbot",
-								png_sticker = sticker0,
-								emojis = get_random_emoji())
+	is_create_sticker_set_success = False
+	backup_count = 0
+	new_sticker_name = sticker_name
+	while not is_create_sticker_set_success:
+		try:
+			bot.create_new_sticker_set(	user_id = user_id,
+										name = new_sticker_name,
+										title = f"{title} @RekcitsEnilbot",
+										png_sticker = sticker0,
+										emojis = get_random_emoji())
+			is_create_sticker_set_success = True
+			sticker_name = new_sticker_name
+		
+		except SHORTNAME_OCCUPY_FAILED:
+			# A special error that I don't know what cause it.
+			# Telegram say that this is an internal error.....
+			new_sticker_name = f"backup_{backup_count}_{sticker_name}"
+			backup_count = backup_count + 1
+
+		except PACK_SHORT_NAME_OCCUPIED:
+			# We find sticker set!!!!!
+			sticker_name = new_sticker_name
+			
+			sticker_set = get_sticker_set(bot, sticker_name)
+
+			bot.edit_message_text(	chat_id = user_id,
+									message_id = output_message_id,
+									text = (	f"總算找到了\n"
+												f"This one?!\n\n"
+												f"Line sticker number:{sticker_number}"))
+
+			bot.send_sticker(	chat_id = user_id,
+								sticker = sticker_set.stickers[0].file_id,
+								reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(	text = title, 
+																							url = f"https://t.me/addstickers/{sticker_name}")]]))
+
+
 
 	# the left images to be uploaded
 	for idx, url in enumerate(urls[1:]):

@@ -167,7 +167,7 @@ def merge_image(background_image, text_image):
 def resize_image_with_maximum(image, maximum):
 	w, h = image.size
 	proportion = 512 / max(w,h)
-	return image.resize((round(w * mag), round(h * mag)), Image.ANTIALIAS)
+	return image.resize((round(w * proportion), round(h * proportion)), Image.ANTIALIAS)
 
 # get image with telegram sticker format from image url 
 # when is_message_sticker = False, url should be a image url

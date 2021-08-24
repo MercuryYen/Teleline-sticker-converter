@@ -229,10 +229,6 @@ def process_text(access_token, user_id, text, output_message_id):
 	# check if there has been a sticker set
 	sticker_set = get_sticker_set(bot, sticker_name)
 
-	print(sticker_set.name)
-	print(sticker_set.title)
-	print(len(sticker_set.stickers))
-
 	# three conditions:
 	# 1. no sticker set -> upload stickers
 	# 2. exist sticker set, and sticker set finished uploading -> return finished sticker set
@@ -290,7 +286,7 @@ def process_text(access_token, user_id, text, output_message_id):
 		except PACK_SHORT_NAME_OCCUPIED:
 			# We find sticker set!!!!!
 			sticker_name = new_sticker_name
-			
+
 			sticker_set = get_sticker_set(bot, sticker_name)
 
 			bot.edit_message_text(	chat_id = user_id,

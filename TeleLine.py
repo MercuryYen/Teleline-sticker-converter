@@ -7,7 +7,7 @@ import requests
 
 from bs4 import BeautifulSoup
 
-from io import StringIO
+from io import BytesIO
 from PIL import Image
 
 import numpy as np
@@ -146,7 +146,7 @@ def delete_sticker_set(sticker_set):
 # get image from image url
 # download and convert to image format
 def get_image_from_url(url):
-	return Image.open(StringIO(requests.get(url).content)).convert('RGBA')
+	return Image.open(BytesIO(requests.get(url).content)).convert('RGBA')
 
 # merge two images with repect to transparency
 def merge_image(background_image, text_image):
@@ -242,7 +242,7 @@ def process_text(access_token, user_id, text, output_message_id):
 												f"Line sticker number:{sticker_number}"))
 
 			bot.send_sticker(	chat_id = user_id,
-								sticker = stickerset.stickers[0].file_id,
+								sticker = sticker_set.stickers[0].file_id,
 								reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(	text = title, 
 																							url = f"https://t.me/addstickers/{sticker_name}")]]))
 			return
@@ -307,28 +307,28 @@ def process_text(access_token, user_id, text, output_message_id):
 # when user type "/start"
 def start(update: Update, context: CallbackContext):
 	update.message.reply_text(text = (	"這個Bot可以將Line上的貼圖轉換成telegram上的貼圖。\n"
-											"This bot can transform Line's stickers to Telegram's sticker.\n\n"
-											"只需將貼圖商店的網址貼上來就會自動轉換\n"
-											"Send me URL of line sticker to convert.\n\n"+
-											"範例example：\n"
-											"https://store.line.me/stickershop/product/3962468/ja"))
+										"This bot can transform Line's stickers to Telegram's sticker.\n\n"
+										"只需將貼圖商店的網址貼上來就會自動轉換\n"
+										"Send me URL of line sticker to convert.\n\n"+
+										"範例example：\n"
+										"https://store.line.me/stickershop/product/3962468/ja"))
 	return
 
 # when user type "/help"
 def help_(update: Update, context: CallbackContext):
 	update.message.reply_text(text = (	"直接傳網址給我就可以惹\n"
-											"Just send me the URL.\n\n"
-											"像這個Like this:\n"
-											"https://store.line.me/stickershop/product/3962468/ja"))
+										"Just send me the URL.\n\n"
+										"像這個Like this:\n"
+										"https://store.line.me/stickershop/product/3962468/ja"))
 
 	return
 
 # when user type "/about"
 def about(update: Update, context: CallbackContext):
 	update.message.reply_text(text = (	"Author: @Homura343\n"
-											"Channel: https://t.me/ArumohChannel\n"
-											"Channel Group: https://t.me/ArumohChannelGroup\n"
-											"Github: https://github.com/Mescury/Teleline-sticker-converter"))
+										"Channel: https://t.me/ArumohChannel\n"
+										"Channel Group: https://t.me/ArumohChannelGroup\n"
+										"Github: https://github.com/Mescury/Teleline-sticker-converter"))
 	return
 
 # when user send message

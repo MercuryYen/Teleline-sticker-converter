@@ -1,0 +1,7 @@
+python-telegram-bot
+Pillow==7.1.0
+flask
+requests
+numpy
+numba
+gunicorn

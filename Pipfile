@@ -7,12 +7,13 @@ verify_ssl = true
 
 [packages]
 python-telegram-bot = "*"
-pillow = "==7.1.0"
+rq = "*"
 requests = "*"
+beautifulsoup4 = "*"
+pillow = "*"
+flask = "*"
 numpy = "*"
-numba = "*"
 gunicorn = "*"
-Flask = "*"
 
 [requires]
 python_version = "3.7"

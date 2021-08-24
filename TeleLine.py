@@ -228,8 +228,8 @@ def process_text(access_token, user_id, text, output_message_id):
 	sticker_name = get_sticker_name_from_sticker_number(bot, sticker_number)
 
 	# a loop to find a valid sticker set name
-	is_valid_sticker_name = False
-	while not is_valid_sticker_name:
+	is_create_sticker_set_success = False
+	while not is_create_sticker_set_success:
 
 		# check if there has been a sticker set
 		sticker_set = get_sticker_set(bot, sticker_name)
@@ -269,11 +269,11 @@ def process_text(access_token, user_id, text, output_message_id):
 		sticker0 = bot.upload_sticker_file(	user_id = user_id,
 											png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
 		# create a sticker set
-		is_create_sticker_set_success = False
+		is_valid_sticker_name = False
 		backup_count = 0
 		new_sticker_name = sticker_name
 
-		while not is_create_sticker_set_success:
+		while not is_valid_sticker_name:
 
 			try:
 				bot.create_new_sticker_set(	user_id = user_id,
@@ -281,8 +281,8 @@ def process_text(access_token, user_id, text, output_message_id):
 											title = f"{title} @RekcitsEnilbot",
 											png_sticker = sticker0,
 											emojis = get_random_emoji())
-				is_create_sticker_set_success = True
 				is_valid_sticker_name = True
+				is_create_sticker_set_success = True
 				sticker_name = new_sticker_name
 
 			except BadRequest as e:
@@ -296,6 +296,7 @@ def process_text(access_token, user_id, text, output_message_id):
 				elif str(e) == "Sticker set name is already occupied":
 					# We found a new sticker name!!
 					sticker_name = new_sticker_name
+					is_valid_sticker_name = True
 				else:
 					print("??????")
 					print(e)

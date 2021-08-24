@@ -304,7 +304,7 @@ def process_text(access_token, user_id, text, output_message_id):
 									sticker = sticker_set.stickers[0].file_id,
 									reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(	text = title, 
 																								url = f"https://t.me/addstickers/{sticker_name}")]]))
-
+				return
 
 	# the left images to be uploaded
 	for idx, url in enumerate(urls[1:]):

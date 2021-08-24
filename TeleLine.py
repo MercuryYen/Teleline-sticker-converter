@@ -1,6 +1,7 @@
 #coding=utf8
 from telegram import InlineKeyboardButton,InlineKeyboardMarkup, Update
 from telegram.ext import CallbackContext, Dispatcher, CommandHandler, MessageHandler, Filters
+from telegram.error import BadRequest
 import telegram
 
 import requests

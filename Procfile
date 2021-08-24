@@ -1,2 +1,2 @@
 web: gunicorn main:app --log-file -
-worker: python Worker.py
+worker: python worker.py

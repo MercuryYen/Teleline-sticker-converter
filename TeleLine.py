@@ -141,7 +141,7 @@ def get_sticker_set(bot, sticker_name):
 	return result
 
 # delete all stickers from sticker set to delete a sticker set
-def delete_sticker_set(sticker_set):
+def delete_sticker_set(bot, sticker_set):
 	for sticker in sticker_set.stickers:
 		bot.delete_sticker_from_set(sticker.file_id)
 
@@ -250,7 +250,7 @@ def process_text(access_token, user_id, text, output_message_id):
 			return
 		# condition 3
 		else:
-			delete_sticker_set(sticker_set)
+			delete_sticker_set(bot, sticker_set)
 
 	# upload
 

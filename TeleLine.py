@@ -112,14 +112,15 @@ def get_sticker_info(text):
 			urls = [t[t.find("(")+1:t.find(";")] for t in text]
 			urls = list(dict.fromkeys(urls))
 			is_message_sticker = False
-
+		
+		c = soup.find("p", "mdCMN38Item01Ttl")
+		title = c.text
 	except:
 		is_message_sticker = False
 		title = ""
 		urls = []
 
-	c = soup.find("p", "mdCMN38Item01Ttl")
-	title = c.text
+	
 
 	return is_message_sticker, title, urls
 

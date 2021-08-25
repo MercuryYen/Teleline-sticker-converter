@@ -229,7 +229,7 @@ def process_text(access_token, user_id, text, output_message_id):
 
 	has_uploaded_first_image = False
 
-	is_valid_sticker_name = False
+	is_valid_sticker_name = True
 	while not is_valid_sticker_name:
 
 		print(sticker_name)

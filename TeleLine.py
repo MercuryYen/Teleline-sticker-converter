@@ -312,6 +312,7 @@ def process_text(access_token, user_id, text, output_message_id):
 			sticker = bot.upload_sticker_file(	user_id = user_id,
 												png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
 		except Exception as e:
+			print(url)
 			print(e)
 			return
 

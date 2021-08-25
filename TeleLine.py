@@ -169,7 +169,13 @@ def merge_image(background_image, text_image):
 def resize_image_with_maximum(image, maximum):
 	w, h = image.size
 	proportion = 512 / max(w,h)
-	return image.resize((round(w * proportion), round(h * proportion)), Image.ANTIALIAS)
+
+	new_w = round(w * proportion)
+	new_h = round(h * proportion)
+	if new_w >= new_h: new_w = 512
+	if new_h >= new_w: new_h = 512
+
+	return image.resize((new_w, new_h), Image.ANTIALIAS)
 
 # get image with telegram sticker format from image url 
 # when is_message_sticker = False, url should be a image url
@@ -292,7 +298,6 @@ def process_text(access_token, user_id, text, output_message_id):
 				# Telegram say that this is an internal error.....
 				new_sticker_name = f"backup_{backup_count}_{sticker_name}"
 				backup_count = backup_count + 1
-				is_potential_valid_sticker_name = True
 
 			else:
 				print("??????")
@@ -312,6 +317,8 @@ def process_text(access_token, user_id, text, output_message_id):
 			sticker = bot.upload_sticker_file(	user_id = user_id,
 												png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
 		except Exception as e:
+			w, h = sticker_image.size
+			print(w, h)
 			print(url)
 			print(e)
 			return

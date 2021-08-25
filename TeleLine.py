@@ -314,8 +314,13 @@ def process_text(access_token, user_id, text, output_message_id):
 		sticker_image = get_sticker_image_from_url(is_message_sticker, url)
 
 		sticker_image.save(f"{sticker_number}.png")
-		sticker = bot.upload_sticker_file(	user_id = user_id,
-											png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
+
+		try:
+			sticker = bot.upload_sticker_file(	user_id = user_id,
+												png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
+		except Exception as e:
+			print(e)
+			return
 
 		bot.add_sticker_to_set(	user_id=user_id,
 								name = sticker_name,

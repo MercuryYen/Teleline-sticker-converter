@@ -175,7 +175,7 @@ def resize_image_with_maximum(image, maximum):
 	if new_w >= new_h: new_w = 512
 	if new_h >= new_w: new_h = 512
 
-	return image.resize((new_w, new_h), Image.ANTIALIAS)
+	return image.resize((new_w, new_h), Image.BICUBIC)
 
 # get image with telegram sticker format from image url 
 # when is_message_sticker = False, url should be a image url

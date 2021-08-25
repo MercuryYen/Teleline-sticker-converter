@@ -236,14 +236,14 @@ def process_text(access_token, user_id, text, output_message_id):
 	has_uploaded_first_image = False
 	
 	backup_count = 0
-	new_sticker_name = sticker_name
+	new_sticker_name = sticker_name[:]
 	is_valid_sticker_number = False	
 	while not is_valid_sticker_number:
 
-		print(sticker_name)
+		print(new_sticker_name)
 
 		# check if there has been a sticker set
-		sticker_set = get_sticker_set(bot, sticker_name)
+		sticker_set = get_sticker_set(bot, new_sticker_name)
 
 		# three conditions:
 		# 1. no sticker set -> upload stickers
@@ -261,7 +261,7 @@ def process_text(access_token, user_id, text, output_message_id):
 				bot.send_sticker(	chat_id = user_id,
 									sticker = sticker_set.stickers[0].file_id,
 									reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(	text = title, 
-																								url = f"https://t.me/addstickers/{sticker_name}")]]))
+																								url = f"https://t.me/addstickers/{new_sticker_name}")]]))
 				return
 			# condition 3
 			else:
@@ -308,7 +308,7 @@ def process_text(access_token, user_id, text, output_message_id):
 					print(e)
 					return
 
-	sticker_name = new_sticker_name
+	sticker_name = new_sticker_name[:]
 
 
 	# the left images to be uploaded

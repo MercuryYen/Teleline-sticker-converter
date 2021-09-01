@@ -121,7 +121,9 @@ def get_sticker_info(text):
 		title = ""
 		urls = []
 
-	
+	if len(urls) > 0:
+		for idx in range(len(urls)):
+			urls[idx] = urls[idx].replace(")", "")
 
 	return is_message_sticker, title, urls
 
@@ -274,7 +276,11 @@ def process_text(access_token, user_id, text, output_message_id):
 
 		# first image for creating a sticker set
 		if not has_uploaded_first_image:
-			sticker_image = get_sticker_image_from_url(is_message_sticker, urls[0])
+			try:
+				sticker_image = get_sticker_image_from_url(is_message_sticker, urls[0])
+			except Exception as e:
+				print(e)
+
 
 			sticker_image.save(f"{sticker_number}.png")
 			sticker0 = bot.upload_sticker_file(	user_id = user_id,

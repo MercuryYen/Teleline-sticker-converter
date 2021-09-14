@@ -47,6 +47,7 @@ def get_sticker_number_from_url(url):
 	allSplit = split_list_of_string_by([url], "/")
 	allSplit = split_list_of_string_by(allSplit, "=")
 	allSplit = split_list_of_string_by(allSplit, "?")
+	allSplit = split_list_of_string_by(allSplit, "&")
 
 	print(allSplit)
 

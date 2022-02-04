@@ -396,7 +396,6 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 	if sticker_type != "animated":
 		os.remove(f"{sticker_number}.png")
 	else:
-		os.remove(f"{sticker_number}.png")
 		os.remove(f"{sticker_number}.gif")
 		os.remove(f"{sticker_number}.webm")
 		os.remove(f"temp.png")

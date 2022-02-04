@@ -248,7 +248,7 @@ def get_sticker_from_url(sticker_type, url):
 
 	elif sticker_type == "animated":
 		save_file_from_url(url, "temp.png")
-		clip = apng_to_clip("temp.png")
+		clip = apng_to_clip("temp.png").set_duration(3)
 		clip = resize_clip_with_maximum(clip, 512)
 		return clip
 

@@ -128,6 +128,8 @@ def get_sticker_info(text):
 		for idx in range(len(urls)):
 			urls[idx] = urls[idx].replace(")", "")
 
+	print(is_message_sticker, title, urls)
+
 	return is_message_sticker, title, urls
 
 # get sticker name from sticker number

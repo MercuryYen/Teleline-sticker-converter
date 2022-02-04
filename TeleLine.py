@@ -349,6 +349,7 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 					backup_count = backup_count + 1
 					is_potential_valid_sticker_name = True
 				else:
+					print(sticker0)
 					print("??????")
 					print(e)
 					return

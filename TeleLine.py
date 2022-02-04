@@ -450,7 +450,7 @@ def text(update: Update, context: CallbackContext):
 	message = update.message.reply_text(text = (	"正在試試看這東西\n"
 													"Testing this message."))
 
-	bot = telegram.Bot(token=access_token)
+	bot = telegram.Bot(token=update.message.bot.token)
 
 	# check if text is valid
 	try:

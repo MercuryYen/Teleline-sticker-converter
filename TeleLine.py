@@ -215,7 +215,7 @@ def resize_clip_with_maximum(clip, maximum):
 # convert an apng file to clip
 def apng_to_clip(image_file_name):
 	apnggif(image_file_name)
-	return mp.VideoFileClip(f"{image_file_name.split(".")[0]}.gif")
+	return mp.VideoFileClip(f"{image_file_name.split('.')[0]}.gif")
 
 
 # a function to save the file using url

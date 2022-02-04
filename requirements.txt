@@ -1,5 +1,5 @@
 python-telegram-bot
-Pillow==7.1.0
+Pillow
 flask
 requests
 numpy

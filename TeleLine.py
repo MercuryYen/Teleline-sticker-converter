@@ -249,7 +249,7 @@ def get_sticker_from_url(sticker_type, url):
 	elif sticker_type == "animated":
 		save_file_from_url(url, "temp.png")
 		clip = apng_to_clip("temp.png")
-		clip = resize_webm_with_maximum(clip, 512)
+		clip = resize_clip_with_maximum(clip, 512)
 		clip.write_videofile("temp.webm", fps=30, ffmpeg_params=["-c:v", "libvpx-vp9"])
 		return clip
 
@@ -399,6 +399,7 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 		os.remove(f"{sticker_number}.png")
 		os.remove(f"{sticker_number}.gif")
 		os.remove(f"{sticker_number}.webm")
+		os.remove(f"temp.webm")
 
 	# finish uploading
 	bot.send_message(	chat_id = user_id,

@@ -340,6 +340,11 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 				is_potential_valid_sticker_name = True
 				is_valid_sticker_number = True
 
+				upload_text = f"{upload_static_text}{'*' * 1}{'_' * (len(urls) - 1)}{1}/{len(urls)}"
+				bot.edit_message_text(	chat_id = user_id,
+										message_id = output_message_id,
+										text = upload_text)
+
 			except BadRequest as e:
 
 				if str(e) == "Shortname_occupy_failed" or str(e) == "Sticker set name is already occupied":
@@ -349,7 +354,6 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 					backup_count = backup_count + 1
 					is_potential_valid_sticker_name = True
 				else:
-					print(sticker0)
 					print("??????")
 					print(e)
 					return
@@ -396,7 +400,6 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 	if sticker_type != "animated":
 		os.remove(f"{sticker_number}.png")
 	else:
-		os.remove(f"{sticker_number}.gif")
 		os.remove(f"{sticker_number}.webm")
 		os.remove(f"temp.png")
 		os.remove(f"temp.gif")

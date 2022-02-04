@@ -247,7 +247,7 @@ def get_sticker_from_url(sticker_type, url):
 		return image
 
 	elif sticker_type == "animated":
-		save_file_from_url(urls[0], "temp.png")
+		save_file_from_url(url, "temp.png")
 		clip = apng_to_clip("temp.png")
 		clip = resize_webm_with_maximum(clip, 512)
 		clip.write_videofile("temp.webm", fps=30, ffmpeg_params=["-c:v", "libvpx-vp9"])

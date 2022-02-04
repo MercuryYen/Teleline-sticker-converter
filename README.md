@@ -12,7 +12,8 @@ This bot can transform Line's stickers to Telegram's sticker.<p>
 2. Create an app in Heroku.<p>
 3. In Config Vars of the app, set TELEGRAM_BOT_TOKEN to the access token.<p>
 4. Upload programs of the bot to Heroku.<p>
-5. In telegram, set the bot's webhook to {app url}/hook.
+5. Set heroku worker to >=1
+6. In telegram, set the bot's webhook to {app url}/hook.
 
 # 檔案
 main.py 處理網路的地方<p>

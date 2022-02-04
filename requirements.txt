@@ -8,3 +8,4 @@ gunicorn
 apnggif
 moviepy
 beautifulsoup4
+rq

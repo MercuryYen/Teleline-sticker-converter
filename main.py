@@ -1,19 +1,15 @@
 from flask import Flask,request
-import configparser
 import logging
 import TeleLine
+import os
 
 # log setting
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
 					level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# read config file
-config = configparser.ConfigParser()
-config.read('config.ini')
-
 # instance bot
-dispatcher = TeleLine.Dispatcher(access_token = config['TELEGRAM']['ACCESS_TOKEN'])
+dispatcher = TeleLine.Dispatcher(access_token = os.environ.get('TELEGRAM_BOT_TOKEN'))
 
 # setup flask
 app = Flask(__name__)

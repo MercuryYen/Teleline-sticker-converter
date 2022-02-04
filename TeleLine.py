@@ -79,7 +79,7 @@ like is_message_sticker, title, image urls
 when is_message_sticker is False, 
 	urls is a list of sting
 when is_message_sticker is True, 
-	urls is a list of tuples of string standing for pairs of images (background image and text image)
+	urls is a list of list of string standing for pairs of images (background image and text image)
 '''
 def get_sticker_info(text):
 	# convert to soup
@@ -96,7 +96,8 @@ def get_sticker_info(text):
 		if text.find("data-default-text") != -1:
 			classes = soup.find_all("li", "mdCMN09Li FnStickerPreviewItem")
 			texts = [c["data-preview"] for c in classes]
-			urls = [(i[i.find("http"):i.find(".png")+4] for i in t.split("customOverlayUrl")) for t in texts]
+			for t in texts:
+				urls.append([i[i.find("http"):i.find(".png")+4] for i in t.split("customOverlayUrl")])
 			is_message_sticker = True
 
 		# custom stickers
@@ -117,12 +118,13 @@ def get_sticker_info(text):
 		
 		c = soup.find("p", "mdCMN38Item01Ttl")
 		title = c.text
-	except:
+	except Exception as e:
+		print(e)
 		is_message_sticker = False
 		title = ""
 		urls = []
 
-	if len(urls) > 0:
+	if not is_message_sticker and len(urls) > 0:
 		for idx in range(len(urls)):
 			urls[idx] = urls[idx].replace(")", "")
 

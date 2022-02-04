@@ -82,7 +82,6 @@ when is_message_sticker is True,
 	urls is a list of list of string standing for pairs of images (background image and text image)
 '''
 def get_sticker_info(text):
-	print(text)
 	# convert to soup
 	soup = BeautifulSoup(text, "html.parser")
 	
@@ -129,8 +128,6 @@ def get_sticker_info(text):
 		for idx in range(len(urls)):
 			urls[idx] = urls[idx].replace(")", "")
 
-	print(is_message_sticker, title, urls)
-
 	return is_message_sticker, title, urls
 
 # get sticker name from sticker number
@@ -143,7 +140,8 @@ def get_sticker_set(bot, sticker_name):
 	result = None
 	try:
 		result = bot.get_sticker_set(name=sticker_name)
-	except:
+	except Exception as e:
+		print(e)
 		result = None
 
 	return result

@@ -17,6 +17,7 @@ from apnggif import apnggif
 import numpy as np
 
 import os
+from pathlib import Path
 
 import random
 
@@ -315,7 +316,7 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 													png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
 			else:
 				sticker_file.write_videofile(f"{sticker_number}.webm", fps=30, ffmpeg_params=["-c:v", "libvpx-vp9"])
-				sticker0 = open(f"{sticker_number}.webm", 'rb')
+				sticker0 = Path(f"{sticker_number}.webm")
 
 			has_uploaded_first_sticker = True
 

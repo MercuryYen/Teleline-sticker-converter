@@ -7,3 +7,4 @@ numba
 gunicorn
 apnggif
 moviepy
+beautifulsoup4

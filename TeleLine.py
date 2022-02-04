@@ -113,7 +113,7 @@ def get_sticker_info(text):
 			sticker_type = "normal"
 
 		# animated stickers
-		elif text.find('animation-sticker-icon') != -1:
+		elif text.find('animationURL" : "http') != -1:
 			classes = soup.find_all("li", "mdCMN09Li FnStickerPreviewItem")
 			texts = [c["data-preview"] for c in classes]
 			urls = [t[t.find("animationUrl")+17:] for t in texts]
@@ -250,7 +250,6 @@ def get_sticker_from_url(sticker_type, url):
 		save_file_from_url(url, "temp.png")
 		clip = apng_to_clip("temp.png")
 		clip = resize_clip_with_maximum(clip, 512)
-		clip.write_videofile("temp.webm", fps=30, ffmpeg_params=["-c:v", "libvpx-vp9"])
 		return clip
 
 	else:

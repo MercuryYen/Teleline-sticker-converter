@@ -308,10 +308,7 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 
 		# first image for creating a sticker set
 		if not has_uploaded_first_sticker:
-			try:
-				sticker_file = get_sticker_from_url(sticker_type, urls[0])
-			except Exception as e:
-				print(e)
+			sticker_file = get_sticker_from_url(sticker_type, urls[0])
 
 			if sticker_type != "animated":
 				sticker_file.save(f"{sticker_number}.png")
@@ -484,7 +481,7 @@ def text_(update: Update, context: CallbackContext):
 	sticker_name = get_sticker_name_from_sticker_number(bot, sticker_type, sticker_number)
 	sticker_set = get_sticker_set(bot, sticker_name)
 	if sticker_set != None:
-		# condition 2
+		# exist sticker set, check if there are true number of stickers
 		if len(sticker_set.stickers) == len(urls):
 			bot.edit_message_text(	chat_id = update.effective_message.chat_id,
 									message_id = message.message_id,

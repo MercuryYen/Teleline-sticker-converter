@@ -470,7 +470,7 @@ def text(update: Update, context: CallbackContext):
 										"Invalid URL"))
 		return
 
-	sticker_type, title, urls = get_sticker_info(text)
+	sticker_type, title, urls = get_sticker_info(n.text)
 
 	# can't find any sticker
 	if len(urls) == 0:

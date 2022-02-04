@@ -497,7 +497,7 @@ def text_(update: Update, context: CallbackContext):
 			return
 
 	# need to create stickerset
-	q.enqueue(process_text, update.message.bot.token, update.effective_message.chat_id, sticker_number, sticker_type, title, urls, message.message_id)
+	q.enqueue(process_text, update.message.bot.token, update.effective_message.chat_id, sticker_number, sticker_type, title, urls, message.message_id, job_timeout=360)
 	return
 
 # TeleLine's Dispatcher

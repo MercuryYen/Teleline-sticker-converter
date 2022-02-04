@@ -82,6 +82,7 @@ when is_message_sticker is True,
 	urls is a list of list of string standing for pairs of images (background image and text image)
 '''
 def get_sticker_info(text):
+	print(text)
 	# convert to soup
 	soup = BeautifulSoup(text, "html.parser")
 	

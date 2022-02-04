@@ -314,7 +314,7 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 				sticker0 = bot.upload_sticker_file(	user_id = user_id,
 													png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
 			else:
-				sticker_file.write_videofile("test2.webm", codec = "libvpx-vp9", audio = False, fps=30, ffmpeg_params = ["-pix_fmt", "yuva420p"])
+				sticker_file.write_videofile(f"{sticker_number}.webm", codec = "libvpx-vp9", audio = False, fps=30, ffmpeg_params = ["-pix_fmt", "yuva420p"])
 				sticker0 = f"{sticker_number}.webm"
 
 			has_uploaded_first_sticker = True
@@ -364,7 +364,7 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 		if sticker_type != "animated":
 			sticker_file.save(f"{sticker_number}.png")
 		else :
-			sticker_file.write_videofile("test2.webm", codec = "libvpx-vp9", audio = False, fps=30, ffmpeg_params = ["-pix_fmt", "yuva420p"])
+			sticker_file.write_videofile(f"{sticker_number}.webm", codec = "libvpx-vp9", audio = False, fps=30, ffmpeg_params = ["-pix_fmt", "yuva420p"])
 
 		if sticker_type != "animated":
 			try:

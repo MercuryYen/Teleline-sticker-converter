@@ -113,7 +113,7 @@ def get_sticker_info(text):
 			sticker_type = "normal"
 
 		# animated stickers
-		elif text.find('animationURL" : "http') != -1:
+		elif text.find('animationUrl&quot; : &quot;http') != -1:
 			classes = soup.find_all("li", "mdCMN09Li FnStickerPreviewItem")
 			texts = [c["data-preview"] for c in classes]
 			urls = [t[t.find("animationUrl")+17:] for t in texts]

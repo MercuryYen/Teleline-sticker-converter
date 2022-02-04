@@ -11,6 +11,9 @@ from bs4 import BeautifulSoup
 from io import BytesIO
 from PIL import Image
 
+import moviepy.editor as mp
+from apnggif import apnggif
+
 import numpy as np
 
 import os
@@ -74,11 +77,11 @@ Music Stickers: 		https://store.line.me/stickershop/product/17891/en
 
 '''
 get info of sticker
-like is_message_sticker, title, image urls
+like sticker_type, title, image urls
 
-when is_message_sticker is False, 
+when sticker_type is {normal, animated}
 	urls is a list of sting
-when is_message_sticker is True, 
+when sticker_type is message, 
 	urls is a list of list of string standing for pairs of images (background image and text image)
 '''
 def get_sticker_info(text):
@@ -86,7 +89,8 @@ def get_sticker_info(text):
 	soup = BeautifulSoup(text, "html.parser")
 	
 	# output
-	is_message_sticker = False
+	# "normal", "message", "animated"
+	sticker_type = "normal"
 	title = ""
 	urls = []
 
@@ -98,7 +102,7 @@ def get_sticker_info(text):
 			texts = [c["data-preview"] for c in classes]
 			for t in texts:
 				urls.append([i[i.find("http"):i.find(".png")+4] for i in t.split("customOverlayUrl")])
-			is_message_sticker = True
+			sticker_type = "message"
 
 		# custom stickers
 		elif text.find("mdCMN09Image FnCustomBase") != -1:
@@ -106,7 +110,15 @@ def get_sticker_info(text):
 			text = [t["style"] for t in classes]
 			urls = [t[t.find("(")+1:t.find(";")] for t in text]
 			urls = list(dict.fromkeys(urls))
-			is_message_sticker = False
+			sticker_type = "normal"
+
+		# animated stickers
+		elif text.find('animation-sticker-icon') != -1:
+			classes = soup.find_all("li", "mdCMN09Li FnStickerPreviewItem")
+			texts = [c["data-preview"] for c in classes]
+			urls = [t[t.find("animationUrl")+17:] for t in texts]
+			urls = [t[:t.find(".png")+4] for t in urls] 
+			sticker_type = "animated"
 
 		# other normal stickers
 		else:
@@ -114,25 +126,28 @@ def get_sticker_info(text):
 			text = [t["style"] for t in classes]
 			urls = [t[t.find("(")+1:t.find(";")] for t in text]
 			urls = list(dict.fromkeys(urls))
-			is_message_sticker = False
+			sticker_type = "normal"
 		
 		c = soup.find("p", "mdCMN38Item01Ttl")
 		title = c.text
 	except Exception as e:
 		print(e)
-		is_message_sticker = False
+		sticker_type = "None"
 		title = ""
 		urls = []
 
-	if not is_message_sticker and len(urls) > 0:
+	if sticker_type == "normal" and len(urls) > 0:
 		for idx in range(len(urls)):
 			urls[idx] = urls[idx].replace(")", "")
 
-	return is_message_sticker, title, urls
+	return sticker_type, title, urls
 
 # get sticker name from sticker number
-def get_sticker_name_from_sticker_number(bot, sticker_number):
-	return f"line{sticker_number}_by_{bot.username}"
+def get_sticker_name_from_sticker_number(bot, sticker_type, sticker_number):
+	if sticker_type != "animated":
+		return f"line{sticker_number}_by_{bot.username}"
+	else:
+		return f"line{sticker_number}_animated_by_{bot.username}"
 
 # get telegram sticker set based on name of sticker
 def get_sticker_set(bot, sticker_name):
@@ -174,34 +189,75 @@ def merge_image(background_image, text_image):
 # 10x20, 5 -> 3x5 where 3 standing for round(2.5)
 def resize_image_with_maximum(image, maximum):
 	w, h = image.size
-	proportion = 512 / max(w,h)
+	proportion = maximum / max(w,h)
 
 	new_w = round(w * proportion)
 	new_h = round(h * proportion)
-	if new_w >= new_h: new_w = 512
-	if new_h >= new_w: new_h = 512
+	if new_w >= new_h: new_w = maximum
+	if new_h >= new_w: new_h = maximum
 
 	return image.resize((new_w, new_h), Image.BICUBIC)
 
+# resize clip to have the max dimension be a specific number
+# 5x10, 20 -> 10x20
+# 10x20, 5 -> 3x5 where 3 standing for round(2.5)
+def resize_clip_with_maximum(clip, maximum):
+	w, h = clip.size
+	proportion = maximum / max(w,h)
+
+	new_w = round(w * proportion)
+	new_h = round(h * proportion)
+	if new_w >= new_h: new_w = maximum
+	if new_h >= new_w: new_h = maximum
+
+	return clip.resize((new_w, new_h))
+
+# convert an apng file to clip
+def apng_to_clip(image_file_name):
+	apnggif(image_file_name)
+	return mp.VideoFileClip(f"{image_file_name.split(".")[0]}.gif")
+
+
+# a function to save the file using url
+def save_file_from_url(url, name):
+	with open(name, "wb") as f:
+		f.write(requests.get(url).content)
+
 # get image with telegram sticker format from image url 
-# when is_message_sticker = False, url should be a image url
-# when is_message_sticker = True, url should be a tuple of image urls
+# when sticker_type is normal, url should be a image url
+# when sticker_type is message, url should be a list of image urls
+# when sticker_type is animated, url should be a apng url
 
 # step:
 # 1. download image
-# (1.5. if is_message_sticker = true, merge images)
+# (1.5. if sticker_type is message, merge images)
 # 2. resize to ??? x 512 or 512 x ??? (where ??? <= 512)
-def get_sticker_image_from_url(is_message_sticker, url):
+def get_sticker_from_url(sticker_type, url):
 	# get image from url
-	if not is_message_sticker:
+	if sticker_type == "normal":
 		image = get_image_from_url(url)
-	else:
+		image = resize_image_with_maximum(image, 512)
+		return image
+
+	elif sticker_type == "message":
 		background_image = get_image_from_url(url[0])
 		text_image = get_image_from_url(url[1])
 		image = merge_image(background_image, text_image)
+		image = resize_image_with_maximum(image, 512)
+		return image
 
-	image = resize_image_with_maximum(image, 512)
-	return image
+	elif sticker_type == "animated":
+		save_file_from_url(urls[0], "temp.png")
+		clip = apng_to_clip("temp.png")
+		clip = resize_webm_with_maximum(clip, 512)
+		clip.write_videofile("temp.webm", fps=30, ffmpeg_params=["-c:v", "libvpx-vp9"])
+		return clip
+
+	else:
+		raise Exception("Not a normal sticker type: %s" % sticker_type)
+
+	
+
 
 # main procession of text
 # get page from text, extract sticker's image urls, download image, resize image, upload image
@@ -227,7 +283,7 @@ def process_text(access_token, user_id, text, output_message_id):
 										"Invalid URL"))
 		return
 				
-	is_message_sticker, title, urls = get_sticker_info(n.text)
+	sticker_type, title, urls = get_sticker_info(n.text)
 
 	# can't find any sticker
 	if len(urls) == 0:
@@ -237,9 +293,9 @@ def process_text(access_token, user_id, text, output_message_id):
 									"Can't find any line sticker?!"))
 		return
 
-	sticker_name = get_sticker_name_from_sticker_number(bot, sticker_number)
+	sticker_name = get_sticker_name_from_sticker_number(bot, sticker_type, sticker_number)
 
-	has_uploaded_first_image = False
+	has_uploaded_first_sticker = False
 	
 	backup_count = 0
 	new_sticker_name = sticker_name[:]
@@ -275,21 +331,25 @@ def process_text(access_token, user_id, text, output_message_id):
 
 		# upload
 		upload_static_text = (	f"{title}\n"
-								f"發現{len(urls)}張貼圖\n\n"
-								f"Found {len(urls)} stickers\n")
+								f"發現{len(urls)}張貼圖，轉換需要一段時間，完成時會再通知\n\n"
+								f"Found {len(urls)} stickers. You will be notified when finishing converting\n")
 
 		# first image for creating a sticker set
-		if not has_uploaded_first_image:
+		if not has_uploaded_first_sticker:
 			try:
-				sticker_image = get_sticker_image_from_url(is_message_sticker, urls[0])
+				sticker_file = get_sticker_from_url(sticker_type, urls[0])
 			except Exception as e:
 				print(e)
 
+			if sticker_type != "animated":
+				sticker_file.save(f"{sticker_number}.png")
+				sticker0 = bot.upload_sticker_file(	user_id = user_id,
+													png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
+			else:
+				sticker_file.write_videofile(f"{sticker_number}.webm", fps=30, ffmpeg_params=["-c:v", "libvpx-vp9"])
+				sticker0 = open(f"{sticker_number}.webm", 'rb')
 
-			sticker_image.save(f"{sticker_number}.png")
-			sticker0 = bot.upload_sticker_file(	user_id = user_id,
-												png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
-			has_uploaded_first_image = True
+			has_uploaded_first_sticker = True
 
 		# create a sticker set
 		is_potential_valid_sticker_name = False
@@ -297,11 +357,18 @@ def process_text(access_token, user_id, text, output_message_id):
 		while not is_potential_valid_sticker_name:
 
 			try:
-				bot.create_new_sticker_set(	user_id = user_id,
-											name = new_sticker_name,
-											title = f"{title} @RekcitsEnilbot",
-											png_sticker = sticker0,
-											emojis = get_random_emoji())
+				if sticker_type != "animated":
+					bot.create_new_sticker_set(	user_id = user_id,
+												name = new_sticker_name,
+												title = f"{title} @RekcitsEnilbot",
+												png_sticker = sticker0,
+												emojis = get_random_emoji())
+				else:
+					bot.create_new_sticker_set(	user_id = user_id,
+												name = new_sticker_name,
+												title = f"{title} @RekcitsEnilbot",
+												webm_sticker = sticker0,
+												emojis = get_random_emoji())
 				is_potential_valid_sticker_name = True
 				is_valid_sticker_number = True
 
@@ -323,24 +390,33 @@ def process_text(access_token, user_id, text, output_message_id):
 
 	# the left images to be uploaded
 	for idx, url in enumerate(urls[1:]):
-		sticker_image = get_sticker_image_from_url(is_message_sticker, url)
+		sticker_file = get_sticker_from_url(sticker_type, url)
 
-		sticker_image.save(f"{sticker_number}.png")
+		if sticker_type != "animated":
+			sticker_file.save(f"{sticker_number}.png")
+		else :
+			sticker_file.write_videofile(f"{sticker_number}.webm", fps=30, ffmpeg_params=["-c:v", "libvpx-vp9"])
 
-		try:
-			sticker = bot.upload_sticker_file(	user_id = user_id,
-												png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
-		except Exception as e:
-			w, h = sticker_image.size
-			print(w, h)
-			print(url)
-			print(e)
-			return
+		if sticker_type != "animated":
+			try:
+					sticker = bot.upload_sticker_file(	user_id = user_id,
+														png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
+			except Exception as e:
+				w, h = sticker_image.size
+				print(w, h)
+				print(url)
+				print(e)
+				return
 
-		bot.add_sticker_to_set(	user_id=user_id,
-								name = sticker_name,
-								png_sticker = sticker,
-								emojis = get_random_emoji())
+			bot.add_sticker_to_set(	user_id=user_id,
+									name = sticker_name,
+									png_sticker = sticker,
+									emojis = get_random_emoji())
+		else:
+			bot.add_sticker_to_set(	user_id=user_id,
+									name = sticker_name,
+									webm_sticker = open(f"{sticker_number}.webm", 'rb'),
+									emojis = get_random_emoji())
 
 		upload_text = f"{upload_static_text}{'*' * (idx + 2)}{'_' * (len(urls) - (idx + 2))}{idx + 2}/{len(urls)}"
 		bot.edit_message_text(	chat_id = user_id,
@@ -348,7 +424,12 @@ def process_text(access_token, user_id, text, output_message_id):
 								text = upload_text)
 
 	# delete temporary file
-	os.remove(f"{sticker_number}.png")
+	if sticker_type != "animated":
+		os.remove(f"{sticker_number}.png")
+	else:
+		os.remove(f"{sticker_number}.png")
+		os.remove(f"{sticker_number}.gif")
+		os.remove(f"{sticker_number}.webm")
 
 	# finish uploading
 	bot.send_message(	chat_id = user_id,

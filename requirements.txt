@@ -5,3 +5,5 @@ requests
 numpy
 numba
 gunicorn
+apnggif
+moviepy

@@ -399,7 +399,8 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 		os.remove(f"{sticker_number}.png")
 		os.remove(f"{sticker_number}.gif")
 		os.remove(f"{sticker_number}.webm")
-		os.remove(f"temp.webm")
+		os.remove(f"temp.png")
+		os.remove(f"temp.gif")
 
 	# finish uploading
 	bot.send_message(	chat_id = user_id,

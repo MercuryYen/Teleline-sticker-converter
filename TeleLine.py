@@ -455,12 +455,12 @@ def text_(update: Update, context: CallbackContext):
 	# check if text is valid
 	try:
 		# check if there is a sticker number in text 
-		sticker_number = get_sticker_number_from_url(text)
+		sticker_number = get_sticker_number_from_url(update.message.text)
 		if sticker_number == "":
 			raise Exception("Can't find any sticker number in text")
 		
 		# check if text is an url
-		n = requests.get(text)
+		n = requests.get(update.message.text)
 
 	except Exception as e:
 		print(e)

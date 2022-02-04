@@ -446,7 +446,7 @@ def about(update: Update, context: CallbackContext):
 
 # when user send message
 # simply send response and enqueue procession
-def text(update: Update, context: CallbackContext):
+def text_(update: Update, context: CallbackContext):
 	message = update.message.reply_text(text = (	"正在試試看這東西\n"
 													"Testing this message."))
 
@@ -514,7 +514,7 @@ class Dispatcher(Dispatcher):
 		super().add_handler(CommandHandler('start', start))
 		super().add_handler(CommandHandler('help', help_))
 		super().add_handler(CommandHandler('about', about))
-		super().add_handler(MessageHandler(Filters.text, text))
+		super().add_handler(MessageHandler(Filters.text, text_))
 
 	def process_update(self, data):
 		update = Update.de_json(data, self.bot)

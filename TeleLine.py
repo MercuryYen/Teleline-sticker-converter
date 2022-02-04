@@ -410,11 +410,13 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 								f"Finished!\n\n"
 								f"Line sticker number:{sticker_number}\n"
 								f"https://t.me/addstickers/{sticker_name}"))
+
 	# send the first sticker of sticker set
+	sticker_set = get_sticker_set(bot, sticker_name)
 	bot.send_sticker(	chat_id = user_id,
-						sticker = sticker0,
-						reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(	text = title,
-																					url=f"https://t.me/addstickers/{sticker_name}")]]))
+						sticker = sticker_set.stickers[0].file_id,
+						reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(	text = title, 
+																					url = f"https://t.me/addstickers/{sticker_name}")]]))
 
 	return
 

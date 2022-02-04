@@ -316,7 +316,7 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 													png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
 			else:
 				sticker_file.write_videofile(f"{sticker_number}.webm", fps=30, ffmpeg_params=["-c:v", "libvpx-vp9"])
-				sticker0 = Path(f"{sticker_number}.webm")
+				sticker0 = f"{sticker_number}.webm"
 
 			has_uploaded_first_sticker = True
 
@@ -336,7 +336,7 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 					bot.create_new_sticker_set(	user_id = user_id,
 												name = new_sticker_name,
 												title = f"{title} @RekcitsEnilbot",
-												webm_sticker = sticker0,
+												webm_sticker = open(sticker0, 'rb'),
 												emojis = get_random_emoji())
 				is_potential_valid_sticker_name = True
 				is_valid_sticker_number = True

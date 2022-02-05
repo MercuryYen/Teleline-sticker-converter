@@ -538,6 +538,7 @@ def text_(update: Update, context: CallbackContext):
 							message_id = message.message_id,
 							text = 	("沒有找到任何Line貼圖？！\n\n"
 									"Can't find any line sticker?!"))
+		return
 
 	# quickly check if there is an existing sticker set
 	sticker_name = get_sticker_name_from_sticker_number(bot, sticker_type, sticker_number)

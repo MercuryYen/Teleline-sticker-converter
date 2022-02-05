@@ -11,7 +11,9 @@ from bs4 import BeautifulSoup
 from io import BytesIO
 from PIL import Image
 
-import moviepy.editor as mp
+from moviepy import editor as mp
+from moviepy.editor import *
+from moviepy.video.io.ffmpeg_writer import ffmpeg_write_video
 from apnggif import apnggif
 
 import numpy as np
@@ -215,7 +217,7 @@ def resize_clip_with_maximum(clip, maximum):
 # convert an apng file to clip
 def apng_to_clip(image_file_name):
 	apnggif(image_file_name)
-	return mp.VideoFileClip(f"{image_file_name.split('.')[0]}.gif")
+	return mp.VideoFileClip(f"{image_file_name.split('.')[0]}.gif", has_mask=True)
 
 
 # a function to save the file using url
@@ -248,7 +250,9 @@ def get_sticker_from_url(sticker_type, url):
 
 	elif sticker_type == "animated":
 		save_file_from_url(url, "temp.png")
-		clip = apng_to_clip("temp.png").set_duration(3)
+		clip = apng_to_clip("temp.png")
+		if clip.duration > 3:
+			clip = clip.fx(vfx.multiply_speed, final_duration = 3)
 		clip = resize_clip_with_maximum(clip, 512)
 		return clip
 
@@ -314,7 +318,17 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 				sticker0 = bot.upload_sticker_file(	user_id = user_id,
 													png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
 			else:
-				sticker_file.write_videofile(f"{sticker_number}.webm", codec = "libvpx-vp9", audio = False, fps=30, ffmpeg_params = ["-pix_fmt", "yuva420p", "-t", "3"])
+				ffmpeg_write_video(sticker_file,   filename=f"{sticker_number}.webm", 
+						   fps=30, 
+						   codec="libvpx-vp9",
+						   bitrate=None,
+						   preset="medium",
+						   with_mask=True,
+						   write_logfile=False,
+						   audiofile=None,
+						   threads=None,
+						   ffmpeg_params=[],
+						   pixel_format=None)
 				sticker0 = f"{sticker_number}.webm"
 
 			has_uploaded_first_sticker = True
@@ -368,8 +382,18 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 		if sticker_type != "animated":
 			sticker_file.save(f"{sticker_number}.png")
 		else :
-			sticker_file.write_videofile(f"{sticker_number}.webm", codec = "libvpx-vp9", audio = False, fps=30, ffmpeg_params = ["-pix_fmt", "yuva420p", "-t", "3"])
-
+			ffmpeg_write_video(sticker_file,   filename=f"{sticker_number}.webm", 
+						   fps=30, 
+						   codec="libvpx-vp9",
+						   bitrate=None,
+						   preset="medium",
+						   with_mask=True,
+						   write_logfile=False,
+						   audiofile=None,
+						   threads=None,
+						   ffmpeg_params=[],
+						   pixel_format=None)
+			
 		if sticker_type != "animated":
 			try:
 					sticker = bot.upload_sticker_file(	user_id = user_id,

@@ -6,6 +6,5 @@ numpy
 numba
 gunicorn
 apnggif
-moviepy
 beautifulsoup4
 rq

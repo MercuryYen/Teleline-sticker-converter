@@ -7,4 +7,5 @@ numba
 gunicorn
 apnggif
 beautifulsoup4
+moviepy
 rq

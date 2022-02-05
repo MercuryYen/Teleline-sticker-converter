@@ -510,7 +510,7 @@ def text_(update: Update, context: CallbackContext):
 		sticker_set = get_sticker_set(bot, sticker_name)
 		if sticker_set != None:
 			# exist sticker set, check if there are true number of stickers
-			if len(sticker_set.stickers) %4 == 0:
+			if len(sticker_set.stickers) %4 == 0 and sticker_set > 12:
 				bot.edit_message_text(	chat_id = update.effective_message.chat_id,
 										message_id = message.message_id,
 										text = (	f"總算找到了\n"

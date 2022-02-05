@@ -490,9 +490,6 @@ def text_(update: Update, context: CallbackContext):
 		sticker_number = get_sticker_number_from_url(update.message.text)
 		if sticker_number == "":
 			raise Exception("Can't find any sticker number in text")
-		
-		# check if text is an url
-		n = requests.get(update.message.text)
 
 	except Exception as e:
 		print('Error on line {}'.format(sys.exc_info()[-1].tb_lineno), type(e).__name__, e)
@@ -523,15 +520,45 @@ def text_(update: Update, context: CallbackContext):
 																								url = f"https://t.me/addstickers/{sticker_name}")]]))
 				return
 
-	sticker_type, title, urls = get_sticker_info(n.text)
+	is_url_valid = False
+	url_index = 0
+	test_urls = [update.message.text]
+	languages = ["ja", "zh-Hant", "en"]
+	for language in languages:
+		test_urls.append(f"https://store.line.me/stickershop/product/{sticker_number}/{language}")
+	while not is_url_valid:
+		
+		if url_index >= len(test_urls):
+			break
 
-	# can't find any sticker
-	if len(urls) == 0:
+		# check if text is an url
+		try:
+			# check if text is an url
+			n = requests.get(test_urls[url_index])
+
+		except Exception as e:
+			print('Error on line {}'.format(sys.exc_info()[-1].tb_lineno), type(e).__name__, e)
+			print(e)
+			bot.edit_message_text(	chat_id = update.effective_message.chat_id,
+									message_id = message.message_id,
+									text = ("無效網址\n\n"
+											"Invalid URL"))
+			return
+
+		sticker_type, title, urls = get_sticker_info(n.text)
+
+		# can't find any sticker
+		if len(urls) == 0:
+			url_index += 1
+		else:
+			is_url_valid = True
+
+	if not is_url_valid:
 		bot.edit_message_text(chat_id = update.effective_message.chat_id,
 							message_id = message.message_id,
 							text = 	("沒有找到任何Line貼圖？！\n\n"
 									"Can't find any line sticker?!"))
-		return
+
 
 	# need to create stickerset
 	q.enqueue(process_text, update.message.bot.token, update.effective_message.chat_id, sticker_number, sticker_type, title, urls, message.message_id, job_timeout=720)

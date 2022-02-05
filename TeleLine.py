@@ -18,6 +18,7 @@ from apnggif import apnggif
 
 import numpy as np
 
+import sys
 import os
 
 import random
@@ -133,6 +134,7 @@ def get_sticker_info(text):
 		c = soup.find("p", "mdCMN38Item01Ttl")
 		title = c.text
 	except Exception as e:
+		print('Error on line {}'.format(sys.exc_info()[-1].tb_lineno), type(e).__name__, e)
 		print(e)
 		sticker_type = "None"
 		title = ""
@@ -158,6 +160,7 @@ def get_sticker_set(bot, sticker_name):
 	try:
 		result = bot.get_sticker_set(name=sticker_name)
 	except Exception as e:
+		print('Error on line {}'.format(sys.exc_info()[-1].tb_lineno), type(e).__name__, e)
 		print(e)
 		result = None
 
@@ -369,6 +372,7 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 					is_potential_valid_sticker_name = True
 				else:
 					print("??????")
+					print('Error on line {}'.format(sys.exc_info()[-1].tb_lineno), type(e).__name__, e)
 					print(e)
 					return
 
@@ -400,6 +404,7 @@ def process_text(access_token, user_id, sticker_number, sticker_type, title, url
 														png_sticker=open(f"{sticker_number}.png", 'rb')).file_id
 			except Exception as e:
 				w, h = sticker_image.size
+				print('Error on line {}'.format(sys.exc_info()[-1].tb_lineno), type(e).__name__, e)
 				print(w, h)
 				print(url)
 				print(e)
@@ -490,6 +495,7 @@ def text_(update: Update, context: CallbackContext):
 		n = requests.get(update.message.text)
 
 	except Exception as e:
+		print('Error on line {}'.format(sys.exc_info()[-1].tb_lineno), type(e).__name__, e)
 		print(e)
 		bot.edit_message_text(	chat_id = update.effective_message.chat_id,
 								message_id = message.message_id,

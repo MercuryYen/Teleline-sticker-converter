@@ -503,6 +503,26 @@ def text_(update: Update, context: CallbackContext):
 										"Invalid URL"))
 		return
 
+	# quickly check if there is an existing sticker set
+	check_types = ["normal", "animated"]
+	for check_type in check_types:
+		sticker_name = get_sticker_name_from_sticker_number(bot, check_type, sticker_number)
+		sticker_set = get_sticker_set(bot, sticker_name)
+		if sticker_set != None:
+			# exist sticker set, check if there are true number of stickers
+			if len(sticker_set.stickers) == len(urls):
+				bot.edit_message_text(	chat_id = update.effective_message.chat_id,
+										message_id = message.message_id,
+										text = (	f"總算找到了\n"
+													f"This one?!\n\n"
+													f"Line sticker number:{sticker_number}"))
+
+				bot.send_sticker(	chat_id = update.effective_message.chat_id,
+									sticker = sticker_set.stickers[0].file_id,
+									reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(	text = sticker_set.title, 
+																								url = f"https://t.me/addstickers/{sticker_name}")]]))
+				return
+
 	sticker_type, title, urls = get_sticker_info(n.text)
 
 	# can't find any sticker
@@ -512,24 +532,6 @@ def text_(update: Update, context: CallbackContext):
 							text = 	("沒有找到任何Line貼圖？！\n\n"
 									"Can't find any line sticker?!"))
 		return
-
-	# check if there is an existing sticker set
-	sticker_name = get_sticker_name_from_sticker_number(bot, sticker_type, sticker_number)
-	sticker_set = get_sticker_set(bot, sticker_name)
-	if sticker_set != None:
-		# exist sticker set, check if there are true number of stickers
-		if len(sticker_set.stickers) == len(urls):
-			bot.edit_message_text(	chat_id = update.effective_message.chat_id,
-									message_id = message.message_id,
-									text = (	f"總算找到了\n"
-												f"This one?!\n\n"
-												f"Line sticker number:{sticker_number}"))
-
-			bot.send_sticker(	chat_id = update.effective_message.chat_id,
-								sticker = sticker_set.stickers[0].file_id,
-								reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(	text = title, 
-																							url = f"https://t.me/addstickers/{sticker_name}")]]))
-			return
 
 	# need to create stickerset
 	q.enqueue(process_text, update.message.bot.token, update.effective_message.chat_id, sticker_number, sticker_type, title, urls, message.message_id, job_timeout=720)
